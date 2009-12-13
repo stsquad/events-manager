@@ -1,28 +1,47 @@
 <?php
 $form_add_message = "";        
 $form_delete_message = "";
-function dbem_add_booking_form() {                
+function dbem_add_booking_form($event) {                
 	global $form_add_message;
 	//$message = dbem_catch_rsvp();
  
 	$destination = "?".$_SERVER['QUERY_STRING']."#dbem-rsvp-form";
-	$module = "<h3>".__('Book now!','dbem')."</h3><br/>";
+	$module = "<h3>".__('RSVP','dbem')."</h3><br/>";
 	if(!empty($form_add_message))
 		$module .= "<div class='dbem-rsvp-message'>$form_add_message</div>";
+
+	// Create an array we can use for Select boxes
 	$booked_places_options = array();
-	for ( $i = 1; $i <= 10; $i++) 
-		array_push($booked_places_options, "<option value='$i'>$i</option>");
+	for ( $i = 0; $i <= 10; $i++) 
+	  array_push($booked_places_options, "<option value='$i'>$i</option>");
 	
 	$module  .= "<form id='dbem-rsvp-form' name='booking-form' method='post' action='$destination'>
 			<table class='dbem-rsvp-form'>
 				<tr><th scope='row'>".__('Name', 'dbem').":</th><td><input type='text' name='bookerName' value=''/></td></tr>
-				<tr><th scope='row'>".__('E-Mail', 'dbem').":</th><td><input type='text' name='bookerEmail' value=''/></td></tr>
-				<tr><th scope='row'>".__('Phone number', 'dbem').":</th><td><input type='text' name='bookerPhone' value=''/></td></tr>
-				<tr><th scope='row'>".__('Seats', 'dbem').":</th><td><select name='bookedSeats' >";
-		  foreach($booked_places_options as $option) {
-				$module .= $option."\n";                  
-			}
-		$module .= "</select></td></tr>
+				<tr><th scope='row'>".__('E-Mail', 'dbem').":</th><td><input type='text' name='bookerEmail' value=''/></td></tr>";
+
+	//  Does this event have an RSVP code?
+	if (strlen($event['event_rsvp_code'])>0) {
+	      $module .= "<tr><th scope='row'>".__('Invite Code', 'dbem').":</th><td><input type='text' name='rsvpCode' value=''/></td></tr>";
+	}
+
+	
+	$module  .= "		<tr><th scope='row'>".__('Address', 'dbem').":</th><td><textarea name='bookerAddress'></textarea></td></tr>
+				<tr><th scope='row'>".__('Phone number', 'dbem').":</th><td><input type='text' name='bookerPhone' value=''/></td></tr>";
+
+	// How many Adults
+	$module .= "<tr><th scope='row'>".__('Adults', 'dbem').":</th><td><select name='bookedSeats'>";
+	foreach($booked_places_options as $option) {
+	    $module .= $option."\n";                  
+	}
+
+	// How many Children
+	$module  .=  "<tr><th scope='row'>".__('Children', 'dbem').":</th><td><select name='bookedChildren' >";
+	foreach($booked_places_options as $option) {
+	  $module .= $option."\n";                  
+	}
+
+	$module .= "</select></td></tr>
 				<tr><th scope='row'>".__('Comment', 'dbem').":</th><td><textarea name='bookerComment'></textarea></td></tr>
 		</table>
 		<p><input type='submit' value='".__('Send your booking', 'dbem')."'/>   
@@ -68,30 +87,29 @@ function dbem_delete_booking_form() {
 
 function dbem_catch_rsvp() {
   global $form_add_message;   
-	global $form_delete_message;
-	if (isset($_POST['eventAction']) && $_POST['eventAction'] == 'add_booking') { 
-		$result = dbem_book_seats();
-		$form_add_message = $result;
-	  
-		
+  global $form_delete_message;
+
+  if (isset($_POST['eventAction']) && $_POST['eventAction'] == 'add_booking') { 
+    $result = dbem_book_seats();
+    $form_add_message = $result;
   } 
 
-	if (isset($_POST['eventAction']) && $_POST['eventAction'] == 'delete_booking') { 
+  if (isset($_POST['eventAction']) && $_POST['eventAction'] == 'delete_booking') { 
 		
-		$bookerName = $_POST['bookerName'];
-		$bookerEmail = $_POST['bookerEmail'];
-		$booker = dbem_get_person_by_name_and_email($bookerName, $bookerEmail); 
-	  if ($booker) {
-			$booker_id = $booker['person_id'];
-			$booking = dbem_get_booking_by_person_id($booker_id);
-			$result = dbem_delete_booking($booking['booking_id']);
-		} else {
-			$result = __('There are no bookings associated to this name and e-mail', 'dbem');
-		}
-		$form_delete_message = $result; 
+    $bookerName = $_POST['bookerName'];
+    $bookerEmail = $_POST['bookerEmail'];
+    $booker = dbem_get_person_by_name_and_email($bookerName, $bookerEmail); 
+    if ($booker) {
+      $booker_id = $booker['person_id'];
+      $booking = dbem_get_booking_by_person_id($booker_id);
+      $result = dbem_delete_booking($booking['booking_id']);
+    } else {
+      $result = __('There are no bookings associated to this name and e-mail', 'dbem');
+    }
+    $form_delete_message = $result; 
   } 
 	
-	return $result;
+  return $result;
 	
 }   
 add_action('init','dbem_catch_rsvp');  
@@ -101,25 +119,44 @@ add_action('init','dbem_catch_rsvp');
 function dbem_book_seats() {
 	$bookerName = $_POST['bookerName'];
 	$bookerEmail = $_POST['bookerEmail'];
-	$bookerPhone = $_POST['bookerPhone']; 
+	$bookerCode = $_POST['rsvpCode'];
+	$bookerAddress = $_POST['bookerAddress'];
+	$bookerPhone = $_POST['bookerPhone'];    
 	$bookedSeats = $_POST['bookedSeats'];
-	$bookerComment = $_POST['bookerComment'];   
+	$bookedChildren = $_POST['bookedChildren'];
+	$bookerComment = $_POST['bookerComment'];      
+
 	$event_id = $_GET['event_id'];
+	$event = dbem_get_event($event_id);
+
+	// If the event has an RSVP code validate it
+	if (strlen($event['event_rsvp_code'])>0)
+	{
+	  
+	  if (strcmp($event['event_rsvp_code'], $bookerCode) != 0)
+	    {
+	      $result = __('Sorry, the Invite Code is incorrect');
+	      return $result;
+	    }
+	}
+
+	// Add the booker to the database if we haven't heard of them
 	$booker = dbem_get_person_by_name_and_email($bookerName, $bookerEmail); 
 	if (!$booker) {
-   		$booker = dbem_add_person($bookerName, $bookerEmail, $bookerPhone);
+	  $booker = dbem_add_person($bookerName, $bookerEmail, $bookerPhone, $bookerAddress);
 	}
+
+	// Do the actual booking
 	if (dbem_are_seats_available_for($event_id, $bookedSeats)) {  
-		dbem_record_booking($event_id, $booker['person_id'], $bookedSeats,$bookerComment);
+	  dbem_record_booking($event_id, $booker['person_id'], $bookedSeats, $bookedChildren, $bookerComment);
 		
-		$result = __('Your booking has been recorded','dbem');  
-		$mailing_is_active = get_option('dbem_rsvp_mail_notify_is_active');
-		if($mailing_is_active) {
-			dbem_email_rsvp_booking();
-		} 
-		
-	}	else {
-		 $result = __('Sorry, there aren\'t so many seats available!', 'dbem');
+	  $result = __('Your booking has been recorded','dbem');  
+	  $mailing_is_active = get_option('dbem_rsvp_mail_notify_is_active');
+	  if($mailing_is_active) {
+	    dbem_email_rsvp_booking();
+	  } 
+	} else {
+	  $result = __('Sorry, there aren\'t so many seats available!', 'dbem');
 	}  
 	return $result;
 }
@@ -134,7 +171,7 @@ function dbem_get_booking_by_person_id($person_id) {
 	return $result;
 }
 
-function dbem_record_booking($event_id, $person_id, $seats, $comment = "") {
+function dbem_record_booking($event_id, $person_id, $seats, $children=0, $comment = "") {
 	global $wpdb;        
 	$bookings_table = $wpdb->prefix.BOOKINGS_TBNAME;
 	// checking whether the booker has already booked places
@@ -151,7 +188,7 @@ function dbem_record_booking($event_id, $person_id, $seats, $comment = "") {
 		
 	} else {
 		if(true) {
-			$sql = "INSERT INTO $bookings_table (event_id, person_id, booking_seats,booking_comment) VALUES ($event_id, $person_id, $seats,'$comment')";  
+			$sql = "INSERT INTO $bookings_table (event_id, person_id, booking_seats, booking_seats_children, booking_comment) VALUES ($event_id, $person_id, $seats, $children, '$comment')";  
 			$wpdb->query($sql);
 		}  
 	}
@@ -325,11 +362,14 @@ function dbem_email_rsvp_booking(){
 	$bookerEmail = $_POST['bookerEmail'];
 	$bookerPhone = $_POST['bookerPhone'];    
 	$bookedSeats = $_POST['bookedSeats'];
+	$bookedChildren = $_POST['bookedChildren'];
 	$bookerComment = $_POST['bookerComment'];      
-	$event_id = $_GET['event_id'];
 
-	
+	$event_id = $_GET['event_id'];
 	$event = dbem_get_event($event_id);
+
+	$totalSeats = $bookedSeats + $bookedChildren;
+	
 	$available_seats = dbem_get_available_seats($event_id);
 	$reserved_seats = dbem_get_booked_seats($event_id);
 
@@ -338,22 +378,32 @@ function dbem_email_rsvp_booking(){
 	else
 		$contact_id = get_option('dbem_default_contact_person');
   
-  $contact_name = dbem_get_user_name($contact_id);      
- 	
-  $contact_body = dbem_replace_placeholders(get_option('dbem_contactperson_email_body'), $event);
+	$contact_name = dbem_get_user_name($contact_id);      
+
+	// Get email responses, replacing general placeholders
+	$contact_body = dbem_replace_placeholders(get_option('dbem_contactperson_email_body'), $event);
 	$booker_body = dbem_replace_placeholders(get_option('dbem_respondent_email_body'), $event);
 	
 	// email specific placeholders
-	$placeholders = array('#_CONTACTPERSON'=> $contact_name, '#_RESPNAME' =>  $bookerName, '#_RESPEMAIL' => $bookerEmail, '#_SPACES' => $bookedSeats,'#_COMMENT' => $bookerComment, '#_RESERVEDSPACES' => $reserved_seats, '#_AVAILABLESPACES' => $available_seats);
+	$placeholders = array('#_CONTACTPERSON'=> $contact_name,
+			      '#_RESPNAME' =>  $bookerName,
+			      '#_RESPEMAIL' => $bookerEmail,
+			      '#_SPACES' => $totalSeats,
+			      '#_COMMENT' => $bookerComment,
+			      '#_RESERVEDSPACES' => $reserved_seats,
+			      '#_AVAILABLESPACES' => $available_seats);
   
   	foreach($placeholders as $key => $value) {
 		$contact_body= str_replace($key, $value, $contact_body);  
 		$booker_body= str_replace($key, $value, $booker_body);
 	}
-  
+
+	// Send an email to the event admin
 	$contact_email = dbem_get_user_email($contact_id);
 	dbem_send_mail(__("New booking",'dbem'), $contact_body, $contact_email);
-  dbem_send_mail(__('Reservation confirmed','dbem'),$booker_body, $bookerEmail);
+
+	// Send an email to the new registration
+	dbem_send_mail(__('Reservation confirmed','dbem'),$booker_body, $bookerEmail);
 
 } 
    
