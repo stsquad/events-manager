@@ -75,6 +75,8 @@ function dbem_events_subpanel() {
 		$recurrence ['recurrence_byweekno'] = $_POST [recurrence_byweekno];
 		
 		$event ['event_rsvp'] = (is_numeric($_POST ['event_rsvp'])) ? $_POST ['event_rsvp']:0;
+		$event ['event_rsvp_code'] = (strlen($_POST ['event_rsvp_code'])>0) ? $_POST ['event_rsvp_code']:NULL;
+		//$event ['event_rsvp_code'] = "wooow";
 		$event ['event_seats'] = (is_numeric($_POST ['event_seats'])) ? $_POST ['event_seats']:0;
 		
 		if (isset ( $_POST ['event_contactperson_id'] ) && $_POST ['event_contactperson_id'] != '' && $_POST ['event_contactperson_id'] != '-1') {
@@ -443,7 +445,7 @@ function dbem_events_page_content() {
 		$events_N = dbem_events_count_for ( $date );
 		// $_GET['scope'] ? $scope = $_GET['scope']: $scope =  "future";   
 		// $stored_format = get_option('dbem_event_list_item_format');
-		// $events_body  =  dbem_get_events_list(10, $scope, "ASC", $stored_format, $false);  
+		// $events_body  =  dbem_get_event s_list(10, $scope, "ASC", $stored_format, $false);  
 		if ($events_N > 1) {
 			$_GET ['calendar_day'] ? $scope = $_GET ['calendar_day'] : $scope = "future";
 			$stored_format = get_option ( 'dbem_event_list_item_format' );
@@ -817,6 +819,7 @@ function dbem_get_events($limit = "", $scope = "future", $order = "ASC", $offset
 				event_end_time,
 	 			event_notes, 
 				event_rsvp,
+                                event_rsvp_code,
 				recurrence_id, 
 				location_id, 
 				event_contactperson_id,
@@ -877,6 +880,7 @@ function dbem_get_event($event_id) {
 			  	event_end_time,
 					event_notes,
 					event_rsvp,
+                                        event_rsvp_code,
 					event_seats,
 					recurrence_id, 
 					location_id,
@@ -1376,26 +1380,30 @@ function dbem_event_form($event, $title, $element) {
 							</div>
 							<h3 class='hndle'><span>RSVP</span></h3>
 							<div class="inside">
-								<p>
-									<input id="rsvp-checkbox" name='event_rsvp' value='1' type='checkbox'
+		<p>
+		    <input id="rsvp-checkbox" name='event_rsvp' value='1' type='checkbox'
+		    <?php echo $event_RSVP_checked?> />
+		    <?php _e ( 'Enable registration for this event', 'dbem' )?>
+		</p>
+		<div id='rsvp-data'>
+
 		<?php
-		echo $event_RSVP_checked?> />
-									<?php
-		_e ( 'Enable registration for this event', 'dbem' )?>
-								</p>
-								<div id='rsvp-data'>
-									<?php
 		if ($event ['event_contactperson_id'] != NULL)
 			$selected = $event ['event_contactperson_id'];
 		else
 			$selected = '0';
 		?>
-									<p>
-										<?php
-		_e ( 'Spaces' );
-		?>
-										:
-										<input id="seats-input" type="text"
+		<p>
+		<?php _e ( 'Event Code' ); ?>
+		:
+		<input id="event-code-input" type="text"
+		name="event_rsvp_code" size='5' value="<?php
+		echo $event [$pref . 'rsvp_code']?>" />
+		</p>
+		<p>
+		<?php _e ( 'Spaces' ); ?>
+		:
+		<input id="seats-input" type="text"
 		name="event_seats" size='5' value="<?php
 		echo $event [$pref . 'seats']?>" />
 									</p>
