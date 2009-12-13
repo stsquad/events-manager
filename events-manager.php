@@ -343,7 +343,7 @@ function dbem_create_people_table() {
 			person_name tinytext NOT NULL, 
 			person_email tinytext NOT NULL,
 			person_phone tinytext NOT NULL,
-                        person_address text NOT NULL
+                        person_address text NOT NULL,
 			UNIQUE KEY (person_id)
 			);";
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -526,7 +526,7 @@ function dbem_replace_placeholders($format, $event, $target="html") {
 		if (preg_match('/#_ADDBOOKINGFORM/', $result)) {
 		 	$rsvp_is_active = get_option('dbem_gmap_is_active'); 
 			if ($event['event_rsvp']) {
-			   $rsvp_add_module .= dbem_add_booking_form();
+			   $rsvp_add_module .= dbem_add_booking_form($event);
 			} else {
 				$rsvp_add_module .= "";
 			}
