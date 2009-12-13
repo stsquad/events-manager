@@ -186,6 +186,7 @@ function dbem_create_events_table() {
 			event_end_date date NULL, 
 			event_notes text DEFAULT NULL,
 			event_rsvp bool NOT NULL DEFAULT 0,
+			event_rsvp_code tinytext DEFAULT NULL,
 			event_seats tinyint,
 			event_contactperson_id mediumint(9) NULL,  
 			location_id mediumint(9) NOT NULL,
@@ -314,8 +315,10 @@ function dbem_create_bookings_table() {
 		$sql = "CREATE TABLE ".$table_name." (
 			booking_id mediumint(9) NOT NULL AUTO_INCREMENT,
 			event_id tinyint NOT NULL,
-			person_id tinyint NOT NULL, 
+			person_id tinyint NOT NULL,
+                        booking_code tinytext DEFAULT NULL,
 			booking_seats tinyint NOT NULL,
+			booking_seats_children tinyint NOT NULL,
 			booking_comment text DEFAULT NULL,
 			UNIQUE KEY  (booking_id)
 			);";
@@ -338,6 +341,7 @@ function dbem_create_people_table() {
 			person_name tinytext NOT NULL, 
 			person_email tinytext NOT NULL,
 			person_phone tinytext NOT NULL,
+                        person_address text NOT NULL
 			UNIQUE KEY (person_id)
 			);";
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
