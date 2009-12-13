@@ -182,10 +182,10 @@ function dbem_get_people() {
 	return $result;
 }
 
-function dbem_add_person($name, $email, $phone = "") {
+function dbem_add_person($name, $email, $phone = "", $address = "") {
 	global $wpdb; 
 	$people_table = $wpdb->prefix.PEOPLE_TBNAME;
-	$sql = "INSERT INTO $people_table (person_name, person_email, person_phone) VALUES ('$name', '$email', '$phone');";
+	$sql = "INSERT INTO $people_table (person_name, person_email, person_phone, person_address) VALUES ('$name', '$email', '$phone', '$address');";
 	$wpdb->query($sql);
 	$new_person = dbem_get_person_by_name_and_email($name, $email);  
 	return ($new_person);
