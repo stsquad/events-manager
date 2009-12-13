@@ -229,6 +229,7 @@ function dbem_create_events_table() {
 		maybe_add_column($table_name, 'event_start_time', "alter table $table_name add event_start_time time NOT NULL;"); 
 		maybe_add_column($table_name, 'event_end_time', "alter table $table_name add event_end_time time NOT NULL;"); 
 		maybe_add_column($table_name, 'event_rsvp', "alter table $table_name add event_rsvp BOOL NOT NULL;");
+		maybe_add_column($table_name, 'event_rsvp_code', "alter table $table_name add event_rsvp_code tinytext DEFAULT NULL;");
 		maybe_add_column($table_name, 'event_seats', "alter table $table_name add event_seats tinyint NULL;"); 
 		maybe_add_column($table_name, 'location_id', "alter table $table_name add location_id mediumint(9) NOT NULL;");    
 		maybe_add_column($table_name, 'recurrence_id', "alter table $table_name add recurrence_id mediumint(9) NULL;"); 
@@ -325,7 +326,8 @@ function dbem_create_bookings_table() {
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 	} else {
-		maybe_add_column($table_name, 'booking_comment', "ALTER TABLE $table_name add booking_comment text DEFAULT NULL;"); 
+		maybe_add_column($table_name, 'booking_comment', "ALTER TABLE $table_name add booking_comment text DEFAULT NULL;");
+		maybe_add_column($table_name, 'booking_seats_children', "ALTER TABLE $table_name add booking_seats_children tinyint NOT NULL");
 	}
 }
 
