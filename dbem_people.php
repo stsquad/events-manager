@@ -22,21 +22,27 @@ function dbem_people_page() {
 
 add_action('init','dbem_ajax_actions'); 
 function dbem_ajax_actions() {
- 	if(isset($_GET['dbem_ajax_action']) && $_GET['dbem_ajax_action'] == 'booking_data') {
-		if(isset($_GET['id']))   
-     echo "[ {bookedSeats:".dbem_get_booked_seats($_GET['id']).", availableSeats:".dbem_get_available_seats($_GET['id'])."}]"; 
-	die();  
-	}  
-	if(isset($_GET['action']) && $_GET['action'] == 'printable'){
-		if(isset($_GET['event_id']))
-			dbem_printable_booking_report($_GET['event_id']);
-	}
-	
-	if(isset($_GET['query']) && $_GET['query'] == 'GlobalMapData') { 
-		dbem_global_map_json($_GET['eventful']);		
-	 	die();   
- 	}
+  if(isset($_GET['dbem_ajax_action']) && $_GET['dbem_ajax_action'] == 'booking_data') {
+    if(isset($_GET['id']))   
+      echo "[ {bookedSeats:".dbem_get_booked_seats($_GET['id']).", availableSeats:".dbem_get_available_seats($_GET['id'])."}]"; 
+    die();  
+  }  
 
+  if(isset($_GET['action'])) {
+    if ($_GET['action'] == 'printable') {
+      if(isset($_GET['event_id']))
+	dbem_printable_booking_report($_GET['event_id']);
+    }
+    if ($_GET['action'] == 'csv') {
+      if(isset($_GET['event_id']))
+	dbem_csv_booking_report($_GET['event_id']);
+    }
+  }
+	
+  if(isset($_GET['query']) && $_GET['query'] == 'GlobalMapData') { 
+    dbem_global_map_json($_GET['eventful']);		
+    die();   
+  }
    
 }   
 
@@ -89,8 +95,10 @@ function dbem_printable_booking_report($event_id) {
 				<tr>
 					<th scope='col'><?php _e('Name', 'dbem')?></th>
 					<th scope='col'><?php _e('E-mail', 'dbem')?></th>
+					<th scope='col'><?php _e('Address', 'dbem')?></th>
 					<th scope='col'><?php _e('Phone number', 'dbem')?></th> 
-					<th scope='col'><?php _e('Seats', 'dbem')?></th>
+					<th scope='col'><?php _e('Adults', 'dbem')?></th>
+					<th scope='col'><?php _e('Children', 'dbem')?></th>
 					<th scope='col'><?php _e('Comment', 'dbem')?></th> 
 				<?php
 				foreach($bookings as $booking) {       ?>
@@ -98,8 +106,10 @@ function dbem_printable_booking_report($event_id) {
 					
 					<td><?php echo $booking['person_name']?></td> 
 					<td><?php echo $booking['person_email']?></td>
+					<td><?php echo $booking['person_address']?></td>
 					<td><?php echo $booking['person_phone']?></td>
 					<td class='seats-number'><?php echo $booking['booking_seats']?></td>
+					<td class='seats-number'><?php echo $booking['booking_seats_children']?></td>
 					<td><?=$booking['booking_comment'] ?></td> 
 				</tr>
 			   	<?php } ?>
@@ -120,6 +130,30 @@ function dbem_printable_booking_report($event_id) {
 		<?php
 		die();
  		
+} 
+
+function dbem_csv_booking_report($event_id) {
+	$event = dbem_get_event($event_id);
+	$bookings =  dbem_get_bookings_for($event_id);
+	$available_seats = dbem_get_available_seats($event_id);
+	$booked_seats = dbem_get_booked_seats($event_id);   
+
+
+	header("Content-type: text/csv");
+	header("Content-Description: CSV dump of event list");
+
+	echo "Name, E-mail, Address, Phone number, Adults, Children, Comment\n";
+	foreach($bookings as $booking) {
+	  echo $booking['person_name'].",";
+	  echo $booking['person_email'].",";
+	  echo $booking['person_address'].",";
+	  echo $booking['person_phone'].",";
+	  echo $booking['booking_seats'].",";
+	  echo $booking['booking_seats_children'].",";
+	  echo $booking['booking_comment']."\n";
+	}
+
+	die();
 } 
 
 function dbem_people_table() {
@@ -161,7 +195,7 @@ $table .= "</table>";
 function dbem_get_person_by_name_and_email($name, $email) {
 	global $wpdb; 
 	$people_table = $wpdb->prefix.PEOPLE_TBNAME;
-	$sql = "SELECT person_id, person_name, person_email, person_phone FROM $people_table WHERE person_name = '$name' AND person_email = '$email' ;" ;
+	$sql = "SELECT person_id, person_name, person_email, person_phone, person_address FROM $people_table WHERE person_name = '$name' AND person_email = '$email' ;" ;
 	$result = $wpdb->get_row($sql, ARRAY_A);
 	return $result;
 }
@@ -169,7 +203,7 @@ function dbem_get_person_by_name_and_email($name, $email) {
 function dbem_get_person($person_id) {
 	global $wpdb; 
 	$people_table = $wpdb->prefix.PEOPLE_TBNAME;
-	$sql = "SELECT person_id, person_name, person_email, person_phone FROM $people_table WHERE person_id = '$person_id';" ;
+	$sql = "SELECT person_id, person_name, person_email, person_phone, person_address FROM $people_table WHERE person_id = '$person_id';" ;
 	$result = $wpdb->get_row($sql, ARRAY_A);
 	return $result;
 }

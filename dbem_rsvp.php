@@ -271,6 +271,7 @@ function dbem_bookings_compact_table($event_id) {
 	$available_seats = dbem_get_available_seats($event_id);
 	$booked_seats = dbem_get_booked_seats($event_id);   
 	$printable_address = get_bloginfo('url')."/wp-admin/admin.php?page=people&action=printable&event_id=$event_id";
+	$csv_address = get_bloginfo('url')."/wp-admin/admin.php?page=people&action=csv&event_id=$event_id";
 	if (count($bookings)>0) { 
 		$table = 
 		"<div class='wrap'>
@@ -309,10 +310,9 @@ function dbem_bookings_compact_table($event_id) {
 		 	    <br class='clear'/>
 		 		 	<div id='major-publishing-actions'>  
 					<div id='publishing-action'> 
+					<a id='csv'  target='' href='$csv_address'>".__('CSV view','dbem')."</a>
 					<a id='printable'  target='' href='$printable_address'>".__('Printable view','dbem')."</a>
 					<br class='clear'/>             
-	        
-					 
 		 			</div>
 		<br class='clear'/>    
 		 </div> ";                                                        
@@ -336,6 +336,7 @@ function dbem_get_bookings_for($event_id) {
 			$booking['person_name'] = $person['person_name']; 
 			$booking['person_email'] = $person['person_email'];   
 			$booking['person_phone'] = $person['person_phone'];
+			$booking['person_address'] = $person['person_address'];
 			array_push($booking_data, $booking);
 		}
  		return $booking_data;
