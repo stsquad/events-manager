@@ -143,7 +143,8 @@ function dbem_csv_booking_report($event_id) {
 
 	header("Content-type: text/csv");
 	header("Content-Description: CSV dump of event list");
-
+	header("Content-Disposition: inline; filename=event_list.csv");
+		
 	echo "Name, E-mail, Address, Phone number, Adults, Children, Special Diet, Comment\n";
 	foreach($bookings as $booking) {
 	  echo $booking['person_name'].",";
@@ -152,7 +153,7 @@ function dbem_csv_booking_report($event_id) {
 	  echo $booking['person_phone'].",";
 	  echo $booking['booking_seats'].",";
 	  echo $booking['booking_seats_children'].",";
-	  echo '"'.$booking['booking_diet'].'"';
+	  echo '"'.$booking['booking_diet'].'",';
 	  echo '"'.$booking['booking_comment'].'"';
 	  echo "\n";
 	}
