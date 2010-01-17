@@ -1402,21 +1402,15 @@ function dbem_event_form($event, $title, $element) {
 		</p>
 		<p>
 		<?php _e ( 'Spaces' ); ?>
-		:
-		<input id="seats-input" type="text"
-		name="event_seats" size='5' value="<?php
-		echo $event [$pref . 'seats']?>" />
-									</p>
-									<?php
+		: <input id="seats-input" type="text" name="event_seats" size='5' value="<?= $event [$pref . 'seats']?>" />
+		</p>
+
+		<?php
 		if ($event ['event_rsvp']) {
-			?>
-									<?php
 			dbem_bookings_compact_table ( $event [$pref . 'id'] );
-			?>
-									<?php
 		}
 		?>
-								</div>
+	      </div>
 							</div>
 						</div>
 						<?php

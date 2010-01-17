@@ -187,7 +187,7 @@ function dbem_create_events_table() {
 			event_notes text DEFAULT NULL,
 			event_rsvp bool NOT NULL DEFAULT 0,
 			event_rsvp_code tinytext DEFAULT NULL,
-			event_seats tinyint,
+			event_seats smallint,
 			event_contactperson_id mediumint(9) NULL,  
 			location_id mediumint(9) NOT NULL,
 			recurrence_id mediumint(9) NULL,
@@ -230,7 +230,7 @@ function dbem_create_events_table() {
 		maybe_add_column($table_name, 'event_end_time', "alter table $table_name add event_end_time time NOT NULL;"); 
 		maybe_add_column($table_name, 'event_rsvp', "alter table $table_name add event_rsvp BOOL NOT NULL;");
 		maybe_add_column($table_name, 'event_rsvp_code', "alter table $table_name add event_rsvp_code tinytext DEFAULT NULL;");
-		maybe_add_column($table_name, 'event_seats', "alter table $table_name add event_seats tinyint NULL;"); 
+		maybe_add_column($table_name, 'event_seats', "alter table $table_name add event_seats smallint NULL;"); 
 		maybe_add_column($table_name, 'location_id', "alter table $table_name add location_id mediumint(9) NOT NULL;");    
 		maybe_add_column($table_name, 'recurrence_id', "alter table $table_name add recurrence_id mediumint(9) NULL;"); 
 		maybe_add_column($table_name, 'event_contactperson_id', "alter table $table_name add event_contactperson_id mediumint(9) NULL;");
