@@ -99,6 +99,7 @@ function dbem_printable_booking_report($event_id) {
 					<th scope='col'><?php _e('Phone number', 'dbem')?></th> 
 					<th scope='col'><?php _e('Adults', 'dbem')?></th>
 					<th scope='col'><?php _e('Children', 'dbem')?></th>
+					<th scope='col'><?php _e('Dietary', 'dbem')?></th> 
 					<th scope='col'><?php _e('Comment', 'dbem')?></th> 
 				<?php
 				foreach($bookings as $booking) {       ?>
@@ -110,6 +111,7 @@ function dbem_printable_booking_report($event_id) {
 					<td><?php echo $booking['person_phone']?></td>
 					<td class='seats-number'><?php echo $booking['booking_seats']?></td>
 					<td class='seats-number'><?php echo $booking['booking_seats_children']?></td>
+					<td><?=$booking['booking_diet'] ?></td> 
 					<td><?=$booking['booking_comment'] ?></td> 
 				</tr>
 			   	<?php } ?>
@@ -142,15 +144,17 @@ function dbem_csv_booking_report($event_id) {
 	header("Content-type: text/csv");
 	header("Content-Description: CSV dump of event list");
 
-	echo "Name, E-mail, Address, Phone number, Adults, Children, Comment\n";
+	echo "Name, E-mail, Address, Phone number, Adults, Children, Special Diet, Comment\n";
 	foreach($bookings as $booking) {
 	  echo $booking['person_name'].",";
 	  echo $booking['person_email'].",";
-	  echo $booking['person_address'].",";
+	  echo '"'.$booking['person_address'].'",';
 	  echo $booking['person_phone'].",";
 	  echo $booking['booking_seats'].",";
 	  echo $booking['booking_seats_children'].",";
-	  echo $booking['booking_comment']."\n";
+	  echo '"'.$booking['booking_diet'].'"';
+	  echo '"'.$booking['booking_comment'].'"';
+	  echo "\n";
 	}
 
 	die();

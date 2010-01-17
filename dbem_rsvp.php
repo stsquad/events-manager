@@ -47,6 +47,8 @@ function dbem_add_booking_form($event) {
 	      $module .= "<tr><th scope='row'>".__('Invite Code', 'dbem').":</th><td><input type='text' name='rsvpCode' value=''/></td></tr>";
 	}
 
+	$module .= "<tr><th scope='row'>".__('Dietary Requirements', 'dbem').":</th><td><textarea name='bookerDiet'></textarea></td></tr>";
+
 	$module .= "<tr><th scope='row'>".__('Comment', 'dbem').":</th><td><textarea name='bookerComment'></textarea></td></tr>";
 
 	$module .= "</table>
@@ -68,19 +70,15 @@ function dbem_delete_booking_form() {
 		$module .= "<div class='dbem-rsvp-message'>$form_delete_message</div>";
 
 	
-	$module  .= "<form name='booking-delete-form' method='post' action='$destination'>
-			<table class='dbem-rsvp-form'>
-				<tr><th scope='row'>".__('Name', 'dbem').":</th><td><input type='text' name='bookerName' value=''/></td></tr>
-		  	<tr><th scope='row'>".__('E-Mail', 'dbem').":</th><td><input type='text' name='bookerEmail' value=''/></td></tr>
-		  	<input type='hidden' name='eventAction' value='delete_booking'/>
-		</table>
-		<input type='submit' value='".__('Cancel your booking', 'dbem')."'/>
-	</form>";   
-	// $module .= "dati inviati: ";
-	//  	$module .= $_POST['bookerName'];  
-
-	
-	
+	$module  .= "
+<form name='booking-delete-form' method='post' action='$destination'>
+  <table class='dbem-rsvp-form'>
+	<tr><th scope='row'>".__('Name', 'dbem').":</th><td><input type='text' name='bookerName' value=''/></td></tr>
+	<tr><th scope='row'>".__('E-Mail', 'dbem').":</th><td><input type='text' name='bookerEmail' value=''/></td></tr>
+  	<input type='hidden' name='eventAction' value='delete_booking'/>
+  </table>
+  <input type='submit' value='".__('Cancel your booking', 'dbem')."'/>
+<form>";   
 	return $module;
 	
 }
@@ -125,6 +123,7 @@ function dbem_book_seats() {
 	$bookerPhone = $_POST['bookerPhone'];    
 	$bookedSeats = $_POST['bookedSeats'];
 	$bookedChildren = $_POST['bookedChildren'];
+	$bookerDiet = $_POST['bookerDiet'];      
 	$bookerComment = $_POST['bookerComment'];      
 
 	$event_id = $_GET['event_id'];
@@ -149,15 +148,15 @@ function dbem_book_seats() {
 
 	// Do the actual booking
 	if (dbem_are_seats_available_for($event_id, $bookedSeats)) {  
-	  dbem_record_booking($event_id, $booker['person_id'], $bookedSeats, $bookedChildren, $bookerComment);
-		
-	  $result = __('Your booking has been recorded','dbem');  
+	  $action = dbem_record_booking($event_id, $booker['person_id'], $bookedSeats, $bookedChildren, $bookerDiet, $bookerComment);
+
+	  $result = __($action,'dbem');  
 	  $mailing_is_active = get_option('dbem_rsvp_mail_notify_is_active');
 	  if($mailing_is_active) {
-	    dbem_email_rsvp_booking();
+		dbem_email_rsvp_booking();
 	  } 
 	} else {
-	  $result = __('Sorry, there aren\'t so many seats available!', 'dbem');
+	  $result = __('Sorry, there are not so many seats available!', 'dbem');
 	}  
 	return $result;
 }
@@ -172,26 +171,28 @@ function dbem_get_booking_by_person_id($person_id) {
 	return $result;
 }
 
-function dbem_record_booking($event_id, $person_id, $seats, $children=0, $comment = "") {
+function dbem_record_booking($event_id, $person_id, $seats, $children=0, $diet="",  $comment = "") {
 	global $wpdb;        
 	$bookings_table = $wpdb->prefix.BOOKINGS_TBNAME;
+
 	// checking whether the booker has already booked places
 	$sql = "SELECT * FROM $bookings_table WHERE event_id = '$event_id' and person_id = '$person_id'; ";       
-	//echo $sql;
 	$previously_booked = $wpdb->get_row($sql);
 	if ($previously_booked) {  
-		  
-		$total_booked_seats = $previously_booked->booking_seats + $seats;
-		$where = array();
-		$where['booking_id'] =$previously_booked->booking_id;
-		$fields['booking_seats'] = $total_booked_seats;
-	 	$wpdb->update($bookings_table, $fields, $where);
-		
+	  $total_booked_seats = $previously_booked->booking_seats + $seats;
+	  $where = array();
+	  $where['booking_id'] =$previously_booked->booking_id;
+	  $fields['booking_seats'] = $total_booked_seats;
+	  if ($wpdb->update($bookings_table, $fields, $where))
+		return "Your booking has been updated";
+	  else
+		return "Error updating your booking!";
 	} else {
-		if(true) {
-			$sql = "INSERT INTO $bookings_table (event_id, person_id, booking_seats, booking_seats_children, booking_comment) VALUES ($event_id, $person_id, $seats, $children, '$comment')";  
-			$wpdb->query($sql);
-		}  
+	  $sql = "INSERT INTO $bookings_table (event_id, person_id, booking_seats, booking_seats_children, booking_diet, booking_comment) VALUES ($event_id, $person_id, $seats, $children, '$diet', '$comment')";  
+	  if ($wpdb->query($sql))
+		return "Your booking has been recorded";
+	  else
+		return "Error recording your booking!";
 	}
 } 
 function dbem_delete_booking($booking_id) {

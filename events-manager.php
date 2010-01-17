@@ -317,15 +317,17 @@ function dbem_create_bookings_table() {
 			booking_id mediumint(9) NOT NULL AUTO_INCREMENT,
 			event_id tinyint NOT NULL,
 			person_id tinyint NOT NULL,
-                        booking_code tinytext DEFAULT NULL,
+            booking_code tinytext DEFAULT NULL,
 			booking_seats tinyint NOT NULL,
 			booking_seats_children tinyint NOT NULL,
+			booking_diet text DEFAULT NULL,
 			booking_comment text DEFAULT NULL,
 			UNIQUE KEY  (booking_id)
 			);";
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 	} else {
+		maybe_add_column($table_name, 'booking_diet', "ALTER TABLE $table_name add booking_diet text DEFAULT NULL;");
 		maybe_add_column($table_name, 'booking_comment', "ALTER TABLE $table_name add booking_comment text DEFAULT NULL;");
 		maybe_add_column($table_name, 'booking_seats_children', "ALTER TABLE $table_name add booking_seats_children tinyint NOT NULL");
 	}
