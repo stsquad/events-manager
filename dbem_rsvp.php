@@ -1,10 +1,13 @@
 <?php
 $form_add_message = "";        
 $form_delete_message = "";
+
+/* 
+Add the booking form to the page
+*/
 function dbem_add_booking_form($event) {                
 	global $form_add_message;
 	//$message = dbem_catch_rsvp();
- 
 	$destination = "?".$_SERVER['QUERY_STRING']."#dbem-rsvp-form";
 	$module = "<h3>".__('RSVP','dbem')."</h3><br/>";
 	if(!empty($form_add_message))
@@ -15,43 +18,41 @@ function dbem_add_booking_form($event) {
 	for ( $i = 0; $i <= 10; $i++) 
 	  array_push($booked_places_options, "<option value='$i'>$i</option>");
 	
-	$module  .= "<form id='dbem-rsvp-form' name='booking-form' method='post' action='$destination'>
-			<table class='dbem-rsvp-form'>
-				<tr><th scope='row'>".__('Name', 'dbem').":</th><td><input type='text' name='bookerName' value=''/></td></tr>
-				<tr><th scope='row'>".__('E-Mail', 'dbem').":</th><td><input type='text' name='bookerEmail' value=''/></td></tr>";
+	$module .= "<form id='dbem-rsvp-form' name='booking-form' method='post' action='$destination'> <table class='dbem-rsvp-form'>";
 
-	//  Does this event have an RSVP code?
-	if (strlen($event['event_rsvp_code'])>0) {
-	      $module .= "<tr><th scope='row'>".__('Invite Code', 'dbem').":</th><td><input type='text' name='rsvpCode' value=''/></td></tr>";
-	}
-
+	$module .= "<tr><th scope='row'>".__('Name(s)', 'dbem').":</th><td><input type='text' name='bookerName' value=''/></td></tr>";
+		
+	$module .= "<tr><th scope='row'>".__('E-Mail', 'dbem').":</th><td><input type='text' name='bookerEmail' value=''/></td></tr>";
 	
-	$module  .= "		<tr><th scope='row'>".__('Address', 'dbem').":</th><td><textarea name='bookerAddress'></textarea></td></tr>
-				<tr><th scope='row'>".__('Phone number', 'dbem').":</th><td><input type='text' name='bookerPhone' value=''/></td></tr>";
+	$module .= "<tr><th scope='row'>".__('Address', 'dbem').":</th><td><textarea name='bookerAddress'></textarea></td></tr>";
+
+	$module .= "<tr><th scope='row'>".__('Phone number', 'dbem').":</th><td><input type='text' name='bookerPhone' value=''/></td></tr>";
 
 	// How many Adults
 	$module .= "<tr><th scope='row'>".__('Adults', 'dbem').":</th><td><select name='bookedSeats'>";
 	foreach($booked_places_options as $option) {
 	    $module .= $option."\n";                  
 	}
+	$module .= "</select></td></tr>";
 
 	// How many Children
 	$module  .=  "<tr><th scope='row'>".__('Children', 'dbem').":</th><td><select name='bookedChildren' >";
 	foreach($booked_places_options as $option) {
 	  $module .= $option."\n";                  
 	}
+	$module .= "</select></td></tr>";
 
-	$module .= "</select></td></tr>
-				<tr><th scope='row'>".__('Comment', 'dbem').":</th><td><textarea name='bookerComment'></textarea></td></tr>
-		</table>
+	//  Does this event have an RSVP code?
+	if (strlen($event['event_rsvp_code'])>0) {
+	      $module .= "<tr><th scope='row'>".__('Invite Code', 'dbem').":</th><td><input type='text' name='rsvpCode' value=''/></td></tr>";
+	}
+
+	$module .= "<tr><th scope='row'>".__('Comment', 'dbem').":</th><td><textarea name='bookerComment'></textarea></td></tr>";
+
+	$module .= "</table>
 		<p><input type='submit' value='".__('Send your booking', 'dbem')."'/>   
 		 <input type='hidden' name='eventAction' value='add_booking'/></p>  
 	</form>";   
-	// $module .= "dati inviati: ";
-	//  	$module .= $_POST['bookerName'];  
-	//print_r($_SERVER);
- 
-	//$module .= dbem_delete_booking_form();
 	 
 	return $module;
 	
